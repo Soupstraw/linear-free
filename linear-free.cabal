@@ -35,6 +35,8 @@ test-suite linear-free-test
     main-is:          Main.hs
     build-depends:
         base ^>=4.20.0.0,
+        containers,
         hspec,
+        linear-base,
         linear-free,
         QuickCheck

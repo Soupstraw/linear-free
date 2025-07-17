@@ -1,11 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE LinearTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Control.Monad.Free.Linear (
   MonadFreeL (..),
@@ -15,15 +15,15 @@ module Control.Monad.Free.Linear (
   hoistFree,
   foldFree,
   unfold,
+  liftF,
 ) where
 
 import qualified Control.Functor.Linear as Control
-import Data.Functor (Functor)
 import qualified Data.Functor.Linear as Data
 import GHC.Generics (Generic)
 import Prelude.Linear
 
-class MonadFreeL f m where
+class Control.Monad m => MonadFreeL f m where
   wrap :: f (m a) %1 -> m a
 
 data FreeL f a where
@@ -31,37 +31,35 @@ data FreeL f a where
   Free :: f (FreeL f a) %1 -> FreeL f a
   deriving (Generic)
 
-instance (Functor f, Data.Functor f) => Data.Functor (FreeL f) where
+instance Data.Functor f => Data.Functor (FreeL f) where
   fmap f (Pure x) = Pure $ f x
   fmap f (Free m) = Free $ Data.fmap (Data.fmap f) m
 
-instance (Functor f, Control.Functor f) => Control.Functor (FreeL f) where
+instance Control.Functor f => Control.Functor (FreeL f) where
   fmap f (Pure x) = Pure $ f x
   fmap f (Free m) = Free $ Control.fmap (Control.fmap f) m
 
-instance (Functor f, Control.Functor f, Data.Applicative f) => Data.Applicative (FreeL f) where
+instance Control.Functor f => Data.Applicative (FreeL f) where
   {-# INLINE pure #-}
   pure = Pure
 
-  Pure f <*> Pure x = Pure $ f x
-  Pure f <*> Free mx = Free $ Control.fmap (Control.fmap f) mx
-  Free mf <*> Pure x = Free $ Control.fmap ($ x) Control.<$> mf
-  Free ma <*> Free mb = Free $ Control.fmap (Data.<*>) ma Data.<*> mb
+  Pure a <*> Pure b = Pure $ a b
+  Pure a <*> Free mb = Free $ Control.fmap a Control.<$> mb
+  Free ma <*> b = Free $ (Control.<*> b) Control.<$> ma
 
-instance (Functor f, Control.Applicative f) => Control.Applicative (FreeL f) where
+instance Control.Functor f => Control.Applicative (FreeL f) where
   {-# INLINE pure #-}
   pure = Pure
 
-  Pure f <*> Pure x = Pure $ f x
-  Pure f <*> Free mx = Free $ Control.fmap (Control.fmap f) mx
-  Free mf <*> Pure x = Free $ Control.fmap ($ x) Control.<$> mf
-  Free ma <*> Free mb = Free $ Control.fmap (Control.<*>) ma Control.<*> mb
+  Pure a <*> Pure b = Pure $ a b
+  Pure a <*> Free mb = Free $ Control.fmap a Control.<$> mb
+  Free ma <*> b = Free $ (Control.<*> b) Control.<$> ma
 
-instance (Functor f, Control.Applicative f) => Control.Monad (FreeL f) where
+instance Control.Functor f => Control.Monad (FreeL f) where
   Pure x >>= f = f x
   Free m >>= f = Free ((Control.>>= f) Control.<$> m)
 
-instance MonadFreeL f (FreeL f) where
+instance Control.Functor f => MonadFreeL f (FreeL f) where
   {-# INLINE wrap #-}
   wrap = Free
 
@@ -86,3 +84,6 @@ unfold :: Control.Functor f => (b %1 -> Either a (f b)) -> b %1 -> FreeL f a
 unfold f b = case f b of
   Left x -> Pure x
   Right m -> Free $ unfold f Control.<$> m
+
+liftF :: (Control.Functor f, MonadFreeL f m) => f a %1 -> m a
+liftF = wrap . Control.fmap Control.pure
