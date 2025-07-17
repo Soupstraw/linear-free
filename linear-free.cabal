@@ -1,17 +1,14 @@
 cabal-version:      3.0
 name:               linear-free
 version:            0.1.0.0
--- synopsis:
--- description:
+synopsis:           Linear free monads
 license:            MIT
 license-file:       LICENSE
 author:             Joosep Jääger
 maintainer:         joosep.jaager@gmail.com
--- copyright:
 category:           Control
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
--- extra-source-files:
 
 common warnings
     ghc-options: -Wall
@@ -38,4 +35,6 @@ test-suite linear-free-test
     main-is:          Main.hs
     build-depends:
         base ^>=4.20.0.0,
-        linear-free
+        hspec,
+        linear-free,
+        QuickCheck
