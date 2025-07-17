@@ -1,3 +1,5 @@
+![Hackage Version](https://img.shields.io/hackage/v/linear-free)
+
 # Linear free monads
 
 This package implements free monads on top of `linear-base`. Linear free monads
