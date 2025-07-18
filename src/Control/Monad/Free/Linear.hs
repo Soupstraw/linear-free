@@ -8,8 +8,8 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Control.Monad.Free.Linear (
-  MonadFreeL (..),
-  FreeL (..),
+  MonadFree (..),
+  Free (..),
   iter,
   retract,
   hoistFree,
@@ -19,27 +19,29 @@ module Control.Monad.Free.Linear (
 ) where
 
 import qualified Control.Functor.Linear as Control
+import Data.Functor.Classes (Eq1 (..))
 import qualified Data.Functor.Linear as Data
-import GHC.Generics (Generic)
+import GHC.Generics (Generic, Generic1)
 import Prelude.Linear
+import qualified Prelude as Base
 
-class Control.Monad m => MonadFreeL f m where
+class Control.Monad m => MonadFree f m where
   wrap :: f (m a) %1 -> m a
 
-data FreeL f a where
-  Pure :: a %1 -> FreeL f a
-  Free :: f (FreeL f a) %1 -> FreeL f a
-  deriving (Generic)
+data Free f a where
+  Pure :: a %1 -> Free f a
+  Free :: f (Free f a) %1 -> Free f a
+  deriving (Generic, Generic1)
 
-instance Data.Functor f => Data.Functor (FreeL f) where
+instance Data.Functor f => Data.Functor (Free f) where
   fmap f (Pure x) = Pure $ f x
   fmap f (Free m) = Free $ Data.fmap (Data.fmap f) m
 
-instance Control.Functor f => Control.Functor (FreeL f) where
+instance Control.Functor f => Control.Functor (Free f) where
   fmap f (Pure x) = Pure $ f x
   fmap f (Free m) = Free $ Control.fmap (Control.fmap f) m
 
-instance Control.Functor f => Data.Applicative (FreeL f) where
+instance Control.Functor f => Data.Applicative (Free f) where
   {-# INLINE pure #-}
   pure = Pure
 
@@ -47,7 +49,7 @@ instance Control.Functor f => Data.Applicative (FreeL f) where
   Pure a <*> Free mb = Free $ Control.fmap a Control.<$> mb
   Free ma <*> b = Free $ (Control.<*> b) Control.<$> ma
 
-instance Control.Functor f => Control.Applicative (FreeL f) where
+instance Control.Functor f => Control.Applicative (Free f) where
   {-# INLINE pure #-}
   pure = Pure
 
@@ -55,35 +57,39 @@ instance Control.Functor f => Control.Applicative (FreeL f) where
   Pure a <*> Free mb = Free $ Control.fmap a Control.<$> mb
   Free ma <*> b = Free $ (Control.<*> b) Control.<$> ma
 
-instance Control.Functor f => Control.Monad (FreeL f) where
+instance Control.Functor f => Control.Monad (Free f) where
   Pure x >>= f = f x
   Free m >>= f = Free ((Control.>>= f) Control.<$> m)
 
-instance Control.Functor f => MonadFreeL f (FreeL f) where
+instance Control.Functor f => MonadFree f (Free f) where
   {-# INLINE wrap #-}
   wrap = Free
 
-retract :: Control.Monad f => FreeL f a %1 -> f a
+instance Data.Traversable f => Data.Traversable (Free f) where
+  traverse f (Pure x) = Pure Data.<$> f x
+  traverse f (Free m) = Free Data.<$> Data.traverse (Data.traverse f) m
+
+retract :: Control.Monad f => Free f a %1 -> f a
 retract (Pure x) = Control.pure x
 retract (Free m) = m Control.>>= retract
 
-iter :: Control.Functor f => (f a %1 -> a) -> FreeL f a %1 -> a
+iter :: Control.Functor f => (f a %1 -> a) -> Free f a %1 -> a
 iter _ (Pure x) = x
 iter f (Free m) = f $ iter f Control.<$> m
 
 hoistFree ::
-  Control.Functor g => (forall a. f a %1 -> g a) -> FreeL f b %1 -> FreeL g b
+  Control.Functor g => (forall a. f a %1 -> g a) -> Free f b %1 -> Free g b
 hoistFree _ (Pure x) = Pure x
 hoistFree f (Free m) = Free $ hoistFree f Control.<$> f m
 
-foldFree :: Control.Monad m => (forall x. f x %1 -> m x) -> FreeL f a %1 -> m a
+foldFree :: Control.Monad m => (forall x. f x %1 -> m x) -> Free f a %1 -> m a
 foldFree _ (Pure x) = Control.pure x
 foldFree f (Free m) = f m Control.>>= foldFree f
 
-unfold :: Control.Functor f => (b %1 -> Either a (f b)) -> b %1 -> FreeL f a
+unfold :: Control.Functor f => (b %1 -> Either a (f b)) -> b %1 -> Free f a
 unfold f b = case f b of
   Left x -> Pure x
   Right m -> Free $ unfold f Control.<$> m
 
-liftF :: (Control.Functor f, MonadFreeL f m) => f a %1 -> m a
+liftF :: (Control.Functor f, MonadFree f m) => f a %1 -> m a
 liftF = wrap . Control.fmap Control.pure
