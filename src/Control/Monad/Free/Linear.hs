@@ -1,12 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE LinearTypes #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-
 module Control.Monad.Free.Linear (
   MonadFree (..),
   Free (..),
@@ -19,11 +10,9 @@ module Control.Monad.Free.Linear (
 ) where
 
 import qualified Control.Functor.Linear as Control
-import Data.Functor.Classes (Eq1 (..))
 import qualified Data.Functor.Linear as Data
 import GHC.Generics (Generic, Generic1)
 import Prelude.Linear
-import qualified Prelude as Base
 
 class Control.Monad m => MonadFree f m where
   wrap :: f (m a) %1 -> m a
