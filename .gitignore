@@ -1,6 +1,7 @@
 dist
 dist-*
 cabal-dev
+stack.yaml.lock
 *.o
 *.hi
 *.hie

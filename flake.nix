@@ -35,6 +35,7 @@
                 haskell.cabal-install
                 haskell.ghc
                 haskell.haskell-language-server
+                stack
               ];
           };
         }
