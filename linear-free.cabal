@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               linear-free
-version:            0.1.0.0
+version:            0.1.1.0
 synopsis:           Linear free monads
 description:        
   This package implements free monads on top of `linear-base`. Linear free monads 
