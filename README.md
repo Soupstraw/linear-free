@@ -16,7 +16,7 @@ data ProductType
   | Milk
   | Flour
   | Dough
-  | Pancake
+  | Pancakes
   deriving (Base.Eq, Base.Ord, Show)
 
 newtype ProductId = ProductId Int
@@ -84,6 +84,10 @@ pancakeRecipe = Linear.do
   flour <- buy Flour
   dough <- combine Dough [eggs, milk, flour]
   -- Eggs, milk and flour are no longer in scope from this point onwards
-  pancake <- cook Pancake dough
+  pancake <- cook Pancakes dough
   Linear.pure pancake
 ```
+
+## Acknowledgements
+
+The implementations are largely based on the `free` library.
