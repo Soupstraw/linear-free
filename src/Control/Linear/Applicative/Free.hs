@@ -1,4 +1,4 @@
-module Control.Applicative.Free.Linear (
+module Control.Linear.Applicative.Free (
   Ap (..),
   runApD,
   runAp,

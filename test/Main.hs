@@ -8,7 +8,7 @@ module Main (main) where
 
 import qualified Control.Functor.Linear as Control
 import qualified Control.Functor.Linear as Linear
-import Control.Monad.Free.Linear (FreeL (..), liftF)
+import qualified Control.Linear.Monad.Free as Linear
 import qualified Data.Functor.Linear as Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -22,7 +22,7 @@ data ProductType
   | Milk
   | Flour
   | Dough
-  | Pancake
+  | Pancakes
   deriving (Base.Eq, Base.Ord, Show)
 
 newtype ProductId = ProductId Int
@@ -33,25 +33,23 @@ data RecipeF a where
   Cook :: ProductType -> ProductId %1 -> (ProductId %1 -> a) %1 -> RecipeF a
 
 instance Data.Functor RecipeF where
-  fmap f (Buy t c) = Buy t $ f L.. c
-  fmap f (Combine t cs c) = Combine t cs $ f L.. c
-  fmap f (Cook t p c) = Cook t p $ f L.. c
+  fmap = forget Control.fmap
 
 instance Control.Functor RecipeF where
   fmap f (Buy t c) = Buy t $ f L.. c
   fmap f (Combine t cs c) = Combine t cs $ f L.. c
   fmap f (Cook t p c) = Cook t p $ f L.. c
 
-type Recipe a = FreeL RecipeF a
+type Recipe a = Linear.Free RecipeF a
 
 buy :: ProductType -> Recipe ProductId
-buy t = liftF $ Buy t id
+buy t = Linear.liftF $ Buy t id
 
 combine :: ProductType -> [ProductId] %1 -> Recipe ProductId
-combine t ps = liftF $ Combine t ps id
+combine t ps = Linear.liftF $ Combine t ps id
 
 cook :: ProductType -> ProductId %1 -> Recipe ProductId
-cook t p = liftF $ Cook t p id
+cook t p = Linear.liftF $ Cook t p id
 
 pancakeRecipe :: Recipe ProductId
 pancakeRecipe = Linear.do
@@ -59,12 +57,12 @@ pancakeRecipe = Linear.do
   milk <- buy Milk
   flour <- buy Flour
   dough <- combine Dough [eggs, milk, flour]
-  pancake <- cook Pancake dough
+  pancake <- cook Pancakes dough
   Linear.pure pancake
 
 gatherIngredients :: Recipe a -> Map ProductType Int
-gatherIngredients (Pure _) = Map.empty
-gatherIngredients (Free x) = case x of
+gatherIngredients (Linear.Pure _) = Map.empty
+gatherIngredients (Linear.Free x) = case x of
   Buy t c -> Map.insertWith (Base.+) t 1 $ gatherIngredients (c productId)
   Combine _ _ c -> gatherIngredients $ c productId
   Cook _ _ c -> gatherIngredients $ c productId
@@ -76,8 +74,9 @@ main :: IO ()
 main = hspec $ describe "Linear free monad" $ do
   describe "pancake recipe example" $ do
     it "can gather the ingredients" $ do
-      gatherIngredients pancakeRecipe `shouldBe` Map.fromList
-        [ (Eggs, 1)
-        , (Milk, 1)
-        , (Flour, 1)
-        ]
+      gatherIngredients pancakeRecipe
+        `shouldBe` Map.fromList
+          [ (Eggs, 1)
+          , (Milk, 1)
+          , (Flour, 1)
+          ]

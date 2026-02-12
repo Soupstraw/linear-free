@@ -1,4 +1,4 @@
-module Control.Monad.Free.Linear (
+module Control.Linear.Monad.Free (
   MonadFree (..),
   Free (..),
   iter,

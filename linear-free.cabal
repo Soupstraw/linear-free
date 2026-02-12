@@ -24,8 +24,9 @@ common warnings
 library
     import:           warnings
     exposed-modules:
-      Control.Applicative.Free.Linear
-      Control.Monad.Free.Linear
+      Control.Linear.Applicative.Free
+      Control.Linear.Monad.Free
+      Control.Linear.Monad.Free.Church
     build-depends:    
       base >=4.16 && <5,
       linear-base ^>=0.5,
