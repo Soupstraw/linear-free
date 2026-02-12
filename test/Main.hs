@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LinearTypes #-}
 {-# LANGUAGE QualifiedDo #-}
@@ -9,6 +10,7 @@ module Main (main) where
 import qualified Control.Functor.Linear as Control
 import qualified Control.Functor.Linear as Linear
 import qualified Control.Linear.Monad.Free as Linear
+import qualified Control.Linear.Monad.Free.Church as LC
 import qualified Data.Functor.Linear as Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -40,16 +42,22 @@ instance Control.Functor RecipeF where
   fmap f (Combine t cs c) = Combine t cs $ f L.. c
   fmap f (Cook t p c) = Cook t p $ f L.. c
 
+class MonadRecipe m where
+  buy :: ProductType -> m ProductId
+  combine :: ProductType -> [ProductId] %1 -> m ProductId
+  cook :: ProductType -> ProductId %1 -> m ProductId
+
 type Recipe a = Linear.Free RecipeF a
 
-buy :: ProductType -> Recipe ProductId
-buy t = Linear.liftF $ Buy t id
+instance MonadRecipe (Linear.Free RecipeF) where
+  buy t = Linear.liftF $ Buy t id
+  combine t ps = Linear.liftF $ Combine t ps id
+  cook t p = Linear.liftF $ Cook t p id
 
-combine :: ProductType -> [ProductId] %1 -> Recipe ProductId
-combine t ps = Linear.liftF $ Combine t ps id
-
-cook :: ProductType -> ProductId %1 -> Recipe ProductId
-cook t p = Linear.liftF $ Cook t p id
+instance MonadRecipe (LC.F RecipeF) where
+  buy t = LC.liftF $ Buy t id
+  combine t ps = LC.liftF $ Combine t ps id
+  cook t p = LC.liftF $ Cook t p id
 
 pancakeRecipe :: Recipe ProductId
 pancakeRecipe = Linear.do

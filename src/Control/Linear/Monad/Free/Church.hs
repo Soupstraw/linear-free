@@ -65,24 +65,24 @@ improve f = fromF @_ @f f
 fromF :: forall m f a. MonadFree f m => F f a %1 -> m a
 fromF (F m) = m Control.return wrap
 
-iter :: (f a %1 -> a) -> F f a -> a
+iter :: (f a %1 -> a) -> F f a %1 -> a
 iter f (F m) = m id f
 
-iterM :: Control.Applicative m => (f (m a) %1 -> m a) -> F f a -> m a
+iterM :: Control.Applicative m => (f (m a) %1 -> m a) -> F f a %1 -> m a
 iterM f (F m) = m Control.pure f
 
 toF :: Control.Functor f => Free f a %1 -> F f a
 toF (Pure x) = F (\p _ -> p x)
 toF (Free f) = wrap (toF Control.<$> f)
 
-retract :: Control.Monad m => F m a -> m a
+retract :: Control.Monad m => F m a %1 -> m a
 retract (F m) = m Control.pure Control.join
 
-hoistF :: (forall x. f x %1 -> g x) -> F f a -> F g a
+hoistF :: (forall x. f x %1 -> g x) -> F f a %1 -> F g a
 hoistF f (F m) = F (\p b -> m p (\x -> b (f x)))
 
-foldF :: Control.Monad m => (forall x. f x %1 -> m x) -> F f a -> m a
+foldF :: Control.Monad m => (forall x. f x %1 -> m x) -> F f a %1 -> m a
 foldF f (F m) = m Control.pure (\x -> Control.join $ f x)
 
-liftF :: (Data.Functor f, MonadFree f m) => f a -> m a
+liftF :: (Data.Functor f, MonadFree f m) => f a %1 -> m a
 liftF x = wrap (Control.pure Data.<$> x)
