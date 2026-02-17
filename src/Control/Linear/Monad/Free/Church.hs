@@ -25,7 +25,7 @@ import qualified Prelude.Linear as L
 newtype F f a where
   F :: (forall r. (a %1 -> r) %1 -> (f r %1 -> r) -> r) %1 -> F f a
 
-runF :: F f a %1 -> (a %1 -> r) %1 -> (f r %1 -> r) -> r
+runF :: F f a %m -> (a %1 -> r) %m -> (f r %1 -> r) -> r
 runF (F m) p b = m p b
 
 instance Data.Functor f => Data.Functor (F f) where

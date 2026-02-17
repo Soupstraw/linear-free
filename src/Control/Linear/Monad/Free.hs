@@ -7,12 +7,14 @@ module Control.Linear.Monad.Free (
   foldFree,
   unfold,
   liftF,
+  runFree,
 ) where
 
 import qualified Control.Functor.Linear as Control
 import qualified Data.Functor.Linear as Data
 import GHC.Generics (Generic, Generic1)
 import Prelude.Linear
+import Prelude (Functor (..))
 
 class Control.Monad m => MonadFree f m where
   wrap :: f (m a) %1 -> m a
@@ -57,6 +59,10 @@ instance Control.Functor f => MonadFree f (Free f) where
 instance Data.Traversable f => Data.Traversable (Free f) where
   traverse f (Pure x) = Pure Data.<$> f x
   traverse f (Free m) = Free Data.<$> Data.traverse (Data.traverse f) m
+
+runFree :: Functor f => Free f a -> (a -> m) -> (f m -> m) -> m
+runFree (Pure x) p _ = p x
+runFree (Free f) p b = b $ fmap (\x -> runFree x p b) f
 
 retract :: Control.Monad f => Free f a %1 -> f a
 retract (Pure x) = Control.pure x

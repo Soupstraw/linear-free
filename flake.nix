@@ -23,7 +23,7 @@
       devShells = forEachSupportedSystem (
         { pkgs }:
         let
-          ghcVersion = "ghc9101";
+          ghcVersion = "ghc9103";
           haskell = pkgs.haskell.packages.${ghcVersion};
         in
         {

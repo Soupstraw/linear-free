@@ -1,5 +1,9 @@
 # Revision history for linear-free
 
+## 0.3.0.0
+
+* Added `runFree`
+
 ## 0.2.0.0
 
 * Added `Control.Linear.Monad.Free.Church`
