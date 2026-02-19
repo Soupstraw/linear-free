@@ -7,6 +7,7 @@ module Control.Linear.Monad.Free (
   foldFree,
   unfold,
   liftF,
+  runFree,
 ) where
 
 import qualified Control.Functor.Linear as Control
@@ -57,6 +58,10 @@ instance Control.Functor f => MonadFree f (Free f) where
 instance Data.Traversable f => Data.Traversable (Free f) where
   traverse f (Pure x) = Pure Data.<$> f x
   traverse f (Free m) = Free Data.<$> Data.traverse (Data.traverse f) m
+
+runFree :: Data.Functor f => (a %1 -> r) -> (f r %1 -> r) -> Free f a %1 -> r
+runFree p _ (Pure x) = p x
+runFree p b (Free m) = b $ runFree p b Data.<$> m
 
 retract :: Control.Monad f => Free f a %1 -> f a
 retract (Pure x) = Control.pure x
