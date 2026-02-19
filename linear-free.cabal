@@ -26,7 +26,6 @@ library
     exposed-modules:
       Control.Linear.Applicative.Free
       Control.Linear.Monad.Free
-      Control.Linear.Monad.Free.Church
     build-depends:    
       base >=4.16 && <5,
       linear-base ^>=0.5,
